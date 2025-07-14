@@ -1,8 +1,9 @@
 # This file configures the build and deployment settings for Netlify.
 
 [build]
-  # Command to build the .NET project. The output is directed to a specific folder.
-  command = "dotnet publish -c Release -o ./netlify/functions/api"
+  # Command to build the .NET project. We explicitly specify the project file
+  # to avoid ambiguity when a .sln file is also present.
+  command = "dotnet publish myapp.csproj -c Release -o ./netlify/functions/api"
   
   # The directory where the serverless function will be placed.
   # Netlify automatically looks for functions in the specified directory.
