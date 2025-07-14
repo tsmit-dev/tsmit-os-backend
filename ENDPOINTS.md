@@ -8,7 +8,7 @@ Este documento descreve todos os endpoints disponíveis na API, como utilizá-lo
 `Authorization: Bearer <seu_token_jwt>`
 
 ---
-
+a
 ## 1. Autenticação
 
 ### 1.1. Login de Usuário
