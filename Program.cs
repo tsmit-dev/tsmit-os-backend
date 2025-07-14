@@ -13,7 +13,8 @@ var Configuration = builder.Configuration;
 // Add services to the container.
 
 // 1. Add the AWS Lambda hosting services. This is the key change for Netlify.
-builder.AddAWSLambdaHosting(LambdaEventSource.HttpApi);
+// THIS IS THE CORRECTED LINE: Called on builder.Services
+builder.Services.AddAWSLambdaHosting(LambdaEventSource.HttpApi);
 
 // 2. Configure Entity Framework Core with PostgreSQL
 var connectionString = Environment.GetEnvironmentVariable("DATABASE_URL");
