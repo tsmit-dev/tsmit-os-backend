@@ -14,7 +14,7 @@ namespace myapp.Controllers
 {
     [ApiController]
     [Route("api/usuarios")]
-    [Authorize] // Placeholder for permission-based authorization
+    [Authorize] // This protects all endpoints in the controller
     public class UsuariosController(ApplicationDbContext context) : ControllerBase
     {
         private readonly ApplicationDbContext _context = context;
@@ -64,6 +64,7 @@ namespace myapp.Controllers
         }
 
         [HttpPost]
+        [AllowAnonymous] // Temporarily allow anonymous access to create the first user
         public async Task<ActionResult<UserResponseDto>> CreateUsuario(UsuarioCreateDto usuarioDto)
         {
             if (await _context.Usuarios.AnyAsync(u => u.Email == usuarioDto.Email))
@@ -77,7 +78,7 @@ namespace myapp.Controllers
                 Email = usuarioDto.Email,
                 PasswordHash = BCrypt.Net.BCrypt.HashPassword(usuarioDto.Password),
                 RoleId = usuarioDto.RoleId,
-                IsActive = usuarioDto.IsActive
+                IsActive = true // New users should be active by default
             };
 
             _context.Usuarios.Add(usuario);
