@@ -1,16 +1,15 @@
 # This file configures the build and deployment settings for Netlify.
 
 [build]
-  # Command to build the .NET project. We explicitly specify the project file
-  # to avoid ambiguity when a .sln file is also present.
-  command = "dotnet publish myapp.csproj -c Release -o ./netlify/functions/api"
+  # We provide dummy environment variables during the build process to satisfy the startup
+  # checks in Program.cs. The real environment variables set in the Netlify UI will be
+  # used at runtime when the function executes.
+  command = "DATABASE_URL='dummy' JWT_KEY='dummy_key_long_enough_for_build' JWT_ISSUER='dummy' JWT_AUDIENCE='dummy' ENCRYPTION_KEY='another_dummy_key_long_enough_for_build' dotnet publish myapp.csproj -c Release -o ./netlify/functions/api"
   
   # The directory where the serverless function will be placed.
-  # Netlify automatically looks for functions in the specified directory.
   functions = "netlify/functions"
 
 # Redirect all incoming API requests to our single .NET serverless function.
-# The '200' status means it's a rewrite, not a browser redirect.
 [[redirects]]
   from = "/*"
   to = "/.netlify/functions/api"
