@@ -1,0 +1,16 @@
+# This file configures the build and deployment settings for Netlify.
+
+[build]
+  # Command to build the .NET project. The output is directed to a specific folder.
+  command = "dotnet publish -c Release -o ./netlify/functions/api"
+  
+  # The directory where the serverless function will be placed.
+  # Netlify automatically looks for functions in the specified directory.
+  functions = "netlify/functions"
+
+# Redirect all incoming API requests to our single .NET serverless function.
+# The '200' status means it's a rewrite, not a browser redirect.
+[[redirects]]
+  from = "/*"
+  to = "/.netlify/functions/api"
+  status = 200

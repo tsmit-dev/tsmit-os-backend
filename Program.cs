@@ -12,25 +12,28 @@ var Configuration = builder.Configuration;
 
 // Add services to the container.
 
-// 1. Configure Entity Framework Core with PostgreSQL
-// This connection string will be provided by Heroku in production
-// and from your local environment variables in development.
+// 1. Add the AWS Lambda hosting services. This is the key change for Netlify.
+builder.AddAWSLambdaHosting(LambdaEventSource.HttpApi);
+
+// 2. Configure Entity Framework Core with PostgreSQL
 var connectionString = Environment.GetEnvironmentVariable("DATABASE_URL");
 if (string.IsNullOrEmpty(connectionString))
 {
-    throw new InvalidOperationException("DATABASE_URL environment variable not found.");
+    // In a serverless environment, this should always be provided.
+    // Throw an exception during build/startup if it's not found.
+    throw new InvalidOperationException("DATABASE_URL environment variable not found. This is required to connect to the database.");
 }
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseNpgsql(connectionString));
 
-// 2. Add Controllers
+// 3. Add Controllers
 builder.Services.AddControllers();
 
-// 3. Configure Swagger
+// 4. Configure Swagger
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-// 4. Configure JWT Authentication using Environment Variables
+// 5. Configure JWT Authentication using Environment Variables
 var jwtKey = Environment.GetEnvironmentVariable("JWT_KEY");
 var jwtIssuer = Environment.GetEnvironmentVariable("JWT_ISSUER");
 var jwtAudience = Environment.GetEnvironmentVariable("JWT_AUDIENCE");
@@ -53,8 +56,7 @@ builder.Services.AddAuthentication(options =>
 })
 .AddJwtBearer(options =>
 {
-    // In production, the "https" part of the URL is handled by the proxy (Heroku), so RequireHttpsMetadata can be false.
-    options.RequireHttpsMetadata = false; 
+    options.RequireHttpsMetadata = false;
     options.SaveToken = true;
     options.TokenValidationParameters = new TokenValidationParameters
     {
@@ -71,8 +73,7 @@ builder.Services.AddAuthentication(options =>
 
 builder.Services.AddAuthorization();
 
-// 5. Register Custom Services
-// Make sure EncryptionKey is also set as an environment variable
+// 6. Register Custom Services
 var encryptionKey = Environment.GetEnvironmentVariable("ENCRYPTION_KEY");
 if (string.IsNullOrEmpty(encryptionKey) || encryptionKey.Length < 32)
 {
@@ -89,28 +90,18 @@ builder.Services.AddSingleton<ISystemSettingsService, SystemSettingsService>();
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
-// Heroku handles HTTPS, so we can conditionally enable Swagger.
+// Swagger is useful for local testing, but not typically exposed in a production serverless function.
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
 }
 
-// Heroku's router handles HTTPS termination.
-// app.UseHttpsRedirection(); // This can sometimes cause issues with proxies like Heroku. It's safer to disable.
-
+app.UseHttpsRedirection();
 app.UseRouting();
-
 app.UseAuthentication();
 app.UseAuthorization();
-
 app.MapControllers();
 
-// Heroku provides the PORT environment variable to bind to.
-var port = Environment.GetEnvironmentVariable("PORT");
-if (!string.IsNullOrEmpty(port))
-{
-    app.Urls.Add($"http://*:{port}");
-}
-
+// app.Run() is replaced by the Lambda hosting services.
 app.Run();
